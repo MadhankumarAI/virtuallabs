@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import LoginPanel from './Loginpanel';
-import SignupPanel from './Signuppanel';
+import LoginPanel from './LoginPanel';
+import SignupPanel from './SignupPanel';
 import ThreeBackground from './ThreeBackground';
 
 const AuthPage = () => {
