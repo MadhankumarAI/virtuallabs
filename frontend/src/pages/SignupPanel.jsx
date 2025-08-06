@@ -34,7 +34,7 @@ const SignupPanel = ({ switchToLogin }) => {
     
     // Simulate registration process
     setTimeout(() => {
-      alert('Registration successful! Welcome to EduPortal.');
+      alert('Registration successful! Welcome to VirtLabs.');
       setIsLoading(false);
     }, 2000);
   };
@@ -50,7 +50,7 @@ const SignupPanel = ({ switchToLogin }) => {
   return (
     <div className="auth-panel signup-panel">
       <div className="logo">
-        <h1>EDUPORTAL</h1>
+        <h1>VIRTLABS</h1>
         <p>STUDENT REGISTRATION</p>
       </div>
       

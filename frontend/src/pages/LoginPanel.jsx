@@ -37,8 +37,8 @@ const LoginPanel = ({ switchToSignup }) => {
   return (
     <div className="auth-panel">
       <div className="logo">
-        <h1>EDUPORTAL</h1>
-        <p>NEURAL LEARNING SYSTEM</p>
+        <h1>VIRTLABS</h1>
+        <p>LEARN FROM ANYWHERE</p>
       </div>
       
       <form onSubmit={handleSubmit}>
