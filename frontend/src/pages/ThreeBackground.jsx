@@ -17,16 +17,25 @@ const ThreeBackground = () => {
       
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(0x000000, 0);
+      
+      // Ensure canvas fills the container
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.top = '0';
+      renderer.domElement.style.left = '0';
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      
       canvasRef.current.appendChild(renderer.domElement);
 
-      // Create particle system
+      // Create particle system with more particles and better distribution
       const geometry = new THREE.BufferGeometry();
-      const particleCount = 500;
+      const particleCount = 800; // Increased particle count
       const positions = new Float32Array(particleCount * 3);
 
+      // Better distribution to cover entire screen
       for (let i = 0; i < particleCount * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 100;
-        positions[i + 1] = (Math.random() - 0.5) * 100;
+        positions[i] = (Math.random() - 0.5) * 200; // Increased spread
+        positions[i + 1] = (Math.random() - 0.5) * 150; // Increased spread
         positions[i + 2] = (Math.random() - 0.5) * 100;
       }
 
@@ -34,7 +43,7 @@ const ThreeBackground = () => {
 
       const material = new THREE.PointsMaterial({
         color: 0xffffff,
-        size: 1,
+        size: 1.5, // Slightly larger particles
         transparent: true,
         opacity: 0.6
       });
