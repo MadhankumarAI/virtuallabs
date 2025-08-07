@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LoginPanel from './LoginPanel';
 import SignupPanel from './SignupPanel';
-import ThreeBackground from './ThreeBackground';
+import CombinedThreeBackground from './CombinedThreeBackground';
 
 const AuthPage = () => {
   const [currentPanel, setCurrentPanel] = useState('login');
@@ -16,7 +16,7 @@ const AuthPage = () => {
 
   return (
     <div className="auth-page">
-      <ThreeBackground />
+      <CombinedThreeBackground/>
       <div className="grid-overlay"></div>
       <div className="floating-elements">
         <div className="floating-cube"></div>
