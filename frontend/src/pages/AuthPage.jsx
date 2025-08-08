@@ -5,6 +5,7 @@ import CombinedThreeBackground from './CombinedThreeBackground';
 
 const AuthPage = () => {
   const [currentPanel, setCurrentPanel] = useState('login');
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1025);
 
   const switchToSignup = () => {
     setCurrentPanel('signup');
@@ -14,9 +15,25 @@ const AuthPage = () => {
     setCurrentPanel('login');
   };
 
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1025);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Determine container class based on panel and screen size
+  const getContainerClass = () => {
+    if (!isDesktop) return 'main-container';
+    return `main-container panel-${currentPanel}-desktop`;
+  };
+
   return (
     <div className="auth-page">
-      <CombinedThreeBackground/>
+      {/* Background effects */}
       <div className="grid-overlay"></div>
       <div className="floating-elements">
         <div className="floating-cube"></div>
@@ -24,11 +41,34 @@ const AuthPage = () => {
         <div className="floating-cube"></div>
       </div>
 
-      <div className="main-container">
-        {currentPanel === 'login' ? (
-          <LoginPanel switchToSignup={switchToSignup} />
+      <div className={getContainerClass()}>
+        {isDesktop ? (
+          // Desktop: Split screen layout
+          <>
+            {/* Auth Panel Section */}
+            <div className="panel-split">
+              {currentPanel === 'login' ? (
+                <LoginPanel switchToSignup={switchToSignup} />
+              ) : (
+                <SignupPanel switchToLogin={switchToLogin} />
+              )}
+            </div>
+            
+            {/* Three.js Section */}
+            <div className="panel-split">
+              <CombinedThreeBackground />
+            </div>
+          </>
         ) : (
-          <SignupPanel switchToLogin={switchToLogin} />
+          // Mobile/Tablet: Centered layout with background
+          <>
+            <CombinedThreeBackground />
+            {currentPanel === 'login' ? (
+              <LoginPanel switchToSignup={switchToSignup} />
+            ) : (
+              <SignupPanel switchToLogin={switchToLogin} />
+            )}
+          </>
         )}
       </div>
     </div>
