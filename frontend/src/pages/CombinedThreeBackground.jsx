@@ -1,13 +1,11 @@
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
-import { AsciiEffect } from "three/examples/jsm/effects/AsciiEffect";
-import { useMediaQuery } from "@mui/material";
 
 function CombinedThreeBackground() {
   const mountRef = useRef(null);
-  const isMobile = useMediaQuery("(max-width: 600px)");
-  const isTablet = useMediaQuery("(min-width: 601px) and (max-width: 1024px)");
-  const isDesktop = useMediaQuery("(min-width: 1025px)");
+  const isMobile = window.innerWidth <= 600;
+  const isTablet = window.innerWidth > 600 && window.innerWidth <= 1024;
+  const isDesktop = window.innerWidth > 1024;
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -16,13 +14,38 @@ function CombinedThreeBackground() {
 
     let camera, scene, renderer, effect, animationId;
     let sphere, plane;
+    let raycaster, mouse;
     const start = Date.now();
+
+    // Color palette for sphere hover effects
+    const colorPalette = [
+      0x3498DB, /* Professional Blue (trust, reliability) */
+      0x2ECC71, /* Success Green (growth, positive action) */
+      0xE67E22, /* Professional Orange (energy, creativity) */
+      0x9B59B6, /* Corporate Purple (innovation, luxury) */
+      0x1ABC9C, /* Teal (modern, sophisticated) */
+      0xF1C40F, /* Gold Amber (warm attention, premium feel) */
+      0xE74C3C, /* Alert Red (urgency, important actions) */
+      0x34495E, /* Steel Blue (stability, trust) */
+      0x16A085, /* Dark Turquoise (fresh, professional) */
+      0x8E44AD, /* Deep Purple (premium, creative) */
+      0x27AE60, /* Forest Green (natural, growth) */
+      0xD35400  /* Dark Orange (confident, energetic) */
+
+    ];
+    
+    let currentColorIndex = 0;
+    let isHovering = false;
 
     if (isDesktop) {
       // ASCII EFFECT (Based on Three.js official example)
       const width = mount.clientWidth;
       const height = mount.clientHeight;
-
+      
+      // Initialize raycaster and mouse
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+      
       // Camera setup
       camera = new THREE.PerspectiveCamera(70, width / height, 1, 1000);
       camera.position.y = 150;
@@ -40,17 +63,18 @@ function CombinedThreeBackground() {
       pointLight2.position.set(-500, -500, -500);
       scene.add(pointLight2);
 
-    
       sphere = new THREE.Mesh(
         new THREE.SphereGeometry(200, 20, 10),
-        new THREE.MeshPhongMaterial({ flatShading: true })
+        new THREE.MeshPhongMaterial({ 
+          flatShading: true,
+          color: 0xffffff // Start with white
+        })
       );
       scene.add(sphere);
 
-      
       plane = new THREE.Mesh(
         new THREE.PlaneGeometry(400, 400),
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0 })
+        new THREE.MeshBasicMaterial({ color: 0x000000})
       );
       plane.position.y = -100;
       plane.rotation.x = -Math.PI / 2;
@@ -60,20 +84,43 @@ function CombinedThreeBackground() {
       renderer = new THREE.WebGLRenderer();
       renderer.setSize(width, height);
 
-      effect = new AsciiEffect(renderer, ' .:-+*=%@#', { invert: true });
-      effect.setSize(width, height);
-      effect.domElement.style.color = 'white';
-      effect.domElement.style.backgroundColor = 'black';
-      effect.domElement.style.width = '100%';
-      effect.domElement.style.height = '100%';
-      effect.domElement.style.display = 'block';
-      effect.domElement.style.fontFamily = 'monospace';
-      effect.domElement.style.fontSize = '12px';
-      effect.domElement.style.lineHeight = '12px';
-      
 
-      // Append to mount
-      mount.appendChild(effect.domElement);
+      const canvas = renderer.domElement;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.display = 'block';
+      canvas.style.filter = 'contrast(200%) brightness(150%)';
+      
+      mount.appendChild(canvas);
+
+      // Mouse event handlers
+      const onMouseMove = (event) => {
+        const rect = mount.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(sphere);
+
+        if (intersects.length > 0) {
+          if (!isHovering) {
+            isHovering = true;
+            // Change to next color in palette
+            currentColorIndex = (currentColorIndex + 1) % colorPalette.length;
+            sphere.material.color.setHex(colorPalette[currentColorIndex]);
+            mount.style.cursor = 'pointer';
+          }
+        } else {
+          if (isHovering) {
+            isHovering = false;
+            // Reset to white when not hovering
+            sphere.material.color.setHex(0x7F8C8D);
+            mount.style.cursor = 'default';
+          }
+        }
+      };
+
+      mount.addEventListener('mousemove', onMouseMove);
 
       // Animation function 
       const animate = () => {
@@ -81,13 +128,12 @@ function CombinedThreeBackground() {
         
         const timer = Date.now() - start;
         
-        // Sphere animations - xhabges req can be done here
+        // Sphere animations
         sphere.position.y = Math.abs(Math.sin(timer * 0.002)) * 200;
         sphere.rotation.x = timer * 0.0003;
         sphere.rotation.z = timer * 0.0002;
         
-        
-        effect.render(scene, camera);
+        renderer.render(scene, camera);
       };
       animate();
 
@@ -98,12 +144,12 @@ function CombinedThreeBackground() {
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
-        effect.setSize(w, h);
       };
       window.addEventListener("resize", handleResize);
 
       return () => {
         window.removeEventListener("resize", handleResize);
+        mount.removeEventListener('mousemove', onMouseMove);
         cancelAnimationFrame(animationId);
         renderer.dispose();
         
@@ -117,8 +163,8 @@ function CombinedThreeBackground() {
           plane.material.dispose();
         }
         
-        if (effect.domElement && mount.contains(effect.domElement)) {
-          mount.removeChild(effect.domElement);
+        if (canvas && mount.contains(canvas)) {
+          mount.removeChild(canvas);
         }
       };
     } else {
@@ -267,10 +313,19 @@ function CombinedThreeBackground() {
         }
       };
     }
-  }, [isMobile, isTablet, isDesktop]);
+  }, []);
 
   return (
-    <div id="ascii-container" ref={mountRef} />
+    <div 
+      id="ascii-container" 
+      ref={mountRef} 
+      style={{
+        width: '100%',
+        height: '100vh',
+        background: '#000',
+        overflow: 'hidden'
+      }}
+    />
   );
 }
 
