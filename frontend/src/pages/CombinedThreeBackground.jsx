@@ -15,6 +15,7 @@ function CombinedThreeBackground() {
     let camera, scene, renderer, effect, animationId;
     let sphere, plane;
     let raycaster, mouse;
+    let vantaEffect;
     const start = Date.now();
 
     // Color palette for sphere hover effects
@@ -31,7 +32,6 @@ function CombinedThreeBackground() {
       0x8E44AD, /* Deep Purple (premium, creative) */
       0x27AE60, /* Forest Green (natural, growth) */
       0xD35400  /* Dark Orange (confident, energetic) */
-
     ];
     
     let currentColorIndex = 0;
@@ -83,7 +83,6 @@ function CombinedThreeBackground() {
       // Renderer setup
       renderer = new THREE.WebGLRenderer();
       renderer.setSize(width, height);
-
 
       const canvas = renderer.domElement;
       canvas.style.width = '100%';
@@ -168,148 +167,64 @@ function CombinedThreeBackground() {
         }
       };
     } else {
-      // --- MOBILE/TABLET: Enhanced Particle System ---
-      const width = mount.clientWidth;
-      const height = mount.clientHeight;
+      // --- MOBILE/TABLET: Vanta.js NET Effect ---
+      
+      // Load Three.js and Vanta.js scripts dynamically
+      const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+          if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      };
 
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(75, width / height, 1, 1000);
-      camera.position.z = 60;
-
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setSize(width, height);
-      renderer.setClearColor(0x000000, 0);
-      mount.appendChild(renderer.domElement);
-
-      // Enhanced particle system
-      const particles = [];
-      const particleCount = 300;
-
-      for (let i = 0; i < particleCount; i++) {
-        // Create different particle types
-        const particleType = Math.random();
-        let sprite;
-        
-        if (particleType < 0.7) {
-          // Regular particles
-          const particleMaterial = new THREE.SpriteMaterial({
-            color: new THREE.Color().setHSL(Math.random() * 0.1 + 0.5, 0.7, 0.8),
-            opacity: 0.3 + Math.random() * 0.4,
-            transparent: true
-          });
-          sprite = new THREE.Sprite(particleMaterial);
-        } else {
-          // Larger accent particles
-          const particleMaterial = new THREE.SpriteMaterial({
-            color: 0x00ff88,
-            opacity: 0.6,
-            transparent: true
-          });
-          sprite = new THREE.Sprite(particleMaterial);
-          sprite.scale.setScalar(2);
+      const initializeVanta = async () => {
+        try {
+          // Load required scripts
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js');
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js');
+          
+          // Wait a bit for scripts to fully load
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Initialize Vanta effect
+          if (window.VANTA && window.VANTA.NET) {
+            vantaEffect = window.VANTA.NET({
+              el: mount,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: true,
+              minHeight: 1000.00,
+              minWidth: 1000.00,
+              scale: 2.00,
+              scaleMobile: 2.00,
+              // color: 0x1ABC9C,
+              color:0x34495E,
+              backgroundColor: 0x000000,
+              points: 10,
+              maxDistance: 20,
+              spacing: 15
+            });
+          }
+        } catch (error) {
+          console.error('Failed to load Vanta.js:', error);
+          // Fallback to a simple background
+          mount.style.background = 'linear-gradient(135deg, #000428 0%, #c8cbc8ff 100%)';
         }
-
-        // Position particles
-        sprite.position.x = (Math.random() - 0.5) * 160;
-        sprite.position.y = (Math.random() - 0.5) * 120;
-        sprite.position.z = (Math.random() - 0.5) * 100;
-        
-        // Add movement properties
-        sprite.userData = {
-          velocityX: (Math.random() - 0.5) * 0.02,
-          velocityY: (Math.random() - 0.5) * 0.02,
-          velocityZ: (Math.random() - 0.5) * 0.01,
-          originalOpacity: sprite.material.opacity,
-          pulseSpeed: 0.001 + Math.random() * 0.003
-        };
-
-        scene.add(sprite);
-        particles.push(sprite);
-      }
-
-      // Add some geometric shapes
-      const shapes = [];
-      for (let i = 0; i < 5; i++) {
-        const geometry = new THREE.RingGeometry(2, 4, 8);
-        const material = new THREE.MeshBasicMaterial({
-          color: 0x00ff88,
-          transparent: true,
-          opacity: 0.1,
-          side: THREE.DoubleSide
-        });
-        const ring = new THREE.Mesh(geometry, material);
-        ring.position.set(
-          (Math.random() - 0.5) * 100,
-          (Math.random() - 0.5) * 80,
-          (Math.random() - 0.5) * 50
-        );
-        ring.userData = {
-          rotationSpeed: 0.001 + Math.random() * 0.002
-        };
-        scene.add(ring);
-        shapes.push(ring);
-      }
-
-      // Enhanced animation
-      const animate = () => {
-        animationId = requestAnimationFrame(animate);
-        
-        const time = Date.now() * 0.001;
-
-        particles.forEach((sprite, i) => {
-          // Move particles
-          sprite.position.x += sprite.userData.velocityX;
-          sprite.position.y += sprite.userData.velocityY;
-          sprite.position.z += sprite.userData.velocityZ;
-
-          // Wrap around screen
-          if (sprite.position.x > 80) sprite.position.x = -80;
-          if (sprite.position.x < -80) sprite.position.x = 80;
-          if (sprite.position.y > 60) sprite.position.y = -60;
-          if (sprite.position.y < -60) sprite.position.y = 60;
-
-          // Pulse opacity
-          sprite.material.opacity = sprite.userData.originalOpacity + 
-            Math.sin(time * sprite.userData.pulseSpeed + i) * 0.3;
-        });
-
-        shapes.forEach((shape) => {
-          shape.rotation.z += shape.userData.rotationSpeed;
-          shape.rotation.x += shape.userData.rotationSpeed * 0.5;
-        });
-
-        renderer.render(scene, camera);
       };
-      animate();
 
-      // Resize handler
-      const handleResize = () => {
-        camera.aspect = mount.clientWidth / mount.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(mount.clientWidth, mount.clientHeight);
-      };
-      window.addEventListener("resize", handleResize);
+      initializeVanta();
 
       return () => {
-        window.removeEventListener("resize", handleResize);
-        cancelAnimationFrame(animationId);
-        renderer.dispose();
-        
-        // Clean up particles
-        particles.forEach(sprite => {
-          if (sprite.material) sprite.material.dispose();
-          if (scene && sprite) scene.remove(sprite);
-        });
-        
-        // Clean up shapes
-        shapes.forEach(shape => {
-          if (shape.geometry) shape.geometry.dispose();
-          if (shape.material) shape.material.dispose();
-          if (scene && shape) scene.remove(shape);
-        });
-        
-        if (mount.contains(renderer.domElement)) {
-          mount.removeChild(renderer.domElement);
+        // Clean up Vanta effect
+        if (vantaEffect && typeof vantaEffect.destroy === 'function') {
+          vantaEffect.destroy();
         }
       };
     }
